@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>Distance Matrix</title>
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
+		<style>
+			html, body {
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+
+			#map-canvas {
+				height: 100%;
+				width: 50%;
+			}
+
+			#content-pane {
+				float: right;
+				width: 48%;
+				padding-left: 2%;
+			}
+
+			#outputDiv {
+				font-size: 11px;
+			}
+		</style>
+		
+		<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+
+		<script type="text/javascript">
+			var map;
+			var geocoder;
+			var bounds = new google.maps.LatLngBounds();
+			var markersArray = [];
+
+			/*
+			var origin = "Broomfield, CO";
+			var destinationA = "Boulder, CO";
+			var destinationB = "Westminster, CO";
+			*/
+			var origin1 = new google.maps.LatLng(55.930, -3.118);
+			var origin2 = 'Greenwich, England';
+			var destinationA = 'Stockholm, Sweden';
+			var destinationB = new google.maps.LatLng(50.087, 14.421);
+
+
+			var originIcon = "https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=O|FFFF00|000000";
+			var destinationIcon = "https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=D|FF0000|000000";
+
+			/*var latlng = getLatLng(origin, function(data) {
+				console.log("data: " + data);
+			});*/
+			
+
+			function initialize() {
+				var options = {
+					center: new google.maps.LatLng(55.53, 9.4),
+					zoom: 10
+				};
+
+				map = new google.maps.Map(document.getElementById("map-canvas"), options);
+				geocoder = new google.maps.Geocoder();
+			}
+
+			function calculateDistances() {
+				var service = new google.maps.DistanceMatrixService();
+				service.getDistanceMatrix({
+					origins: [origin1, origin2],
+					destinations: [destinationA, destinationB],
+					travelMode: google.maps.TravelMode.DRIVING,
+					unitSystem: google.maps.UnitSystem.METRIC,
+					avoidHighways: false,
+					avoidTolls: false
+				}, callback);
+			}
+
+			function callback(response, status) {
+				console.log("CALCULATION - status: " + status);
+				if(status != google.maps.DistanceMatrixStatus.OK) {
+					alert("Error was: " + status);
+				}
+				else {
+					console.log("CALCULATE DISTANCES SUCCESSFUL: " + JSON.stringify(response));
+					var origins = response.originAddresses;
+					var destinations = response.destinationAddresses;
+					var outputDiv = document.getElementById("outputDiv");
+					outputDiv.innerHTML = "";
+					deleteOverlay();
+
+					for(var x=0; x<origins.length; x++) {
+						var results = response.rows[x].elements;
+						addMarker(origins[x], false);
+
+						for(var y=0; y<results.length; y++) {
+							addMarker(destinations[y], true);
+							outputDiv.innerHTML += origins[x] + " to " + destinations[y] 
+								+ ": " + results[y].distance.text + " in "
+								+ results[y].duration.text + "<br/>";
+						}
+					}
+				}
+			}
+
+			function deleteOverlay() {
+				for(var x=0; x < markersArray.length; x++) {
+					markersArray[x].setMap(null);
+				}
+
+				markersArray = [];
+			}
+
+			function addMarker(location, isDestination) {
+				var icon;
+
+				if(isDestination) {
+					icon = destinationIcon;
+				}
+				else {
+					icon = originIcon;
+				}
+
+				geocoder.geocode({"address": location}, function(results, status) {
+					if(status == google.maps.GeocoderStatus.OK) {
+						console.log("GEOCODER SUCCESS");
+						bounds.extend(results[0].geometry.location);
+						map.fitBounds(bounds);
+
+						var marker = new google.maps.Marker({
+							map: map,
+							position: results[0].geometry.location,
+							icon: icon
+						});
+						markersArray.push(marker);
+					}
+					else {
+						console.log("GEOCODER FAILED");	
+					}
+				});
+			}
+
+			function getLatLng(origin) {
+				var url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + origin
+				var output;
+
+				$.ajax({
+					type: "GET",
+					url: url,
+					success: parseResults
+				})
+
+				function parseResults(data) {
+					console.log(JSON.stringify(data.results));
+					output = data.results[0].geometry.location.lat + "," + data.results[0].geometry.location.lng	;
+					console.log(output);
+
+					return output;
+				}	
+			}
+
+			
+		</script>
+	</head>
+	<body onload="initialize()">
+		<div id="content-pane">
+      <div id="inputs">
+        <pre>
+var origin1 = new google.maps.LatLng(55.930, -3.118);
+var origin2 = 'Greenwich, England';
+var destinationA = 'Stockholm, Sweden';
+var destinationB = new google.maps.LatLng(50.087, 14.421);
+        </pre>
+        <p><button type="button" onclick="calculateDistances();">Calculate
+          distances</button></p>
+      </div>
+      <div id="outputDiv"></div>
+    </div>
+    <div id="map-canvas"></div>
+
+	</body>
+</html>

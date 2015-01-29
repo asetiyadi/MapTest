@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>Travelling Salesman</title>
+	<style type="text/css">
+        html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+    </style>
+
+	<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+	
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+	
+
+	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBguA2IzMMVbeWLIER4VzjmfCZ5hRVf22A">
+    </script>
+
+	<script type="text/javascript">
+		var directionSvc = new google.maps.DirectionsService();
+		var directionDisplay;
+		var waypoints = [];
+		var map;
+		
+		var initialize = function() {
+			directionDisplay = new google.maps.DirectionsRenderer();
+			
+			var options = {
+				center: new google.maps.LatLng($("#originLat").val(), $("#originLng").val()),
+				zoom: 18
+			};
+
+			map = new google.maps.Map(document.getElementById("map-canvas"), options);
+			directionDisplay.setMap(map);
+
+			calculateRoute();
+		}
+
+		var getLatLng = function() {
+			var origin = $("#origin").val();
+			console.log("jOrigin = " + origin);
+
+			var url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + origin
+			var output;
+
+			$.ajax({
+				type: "GET",
+				url: url,
+				success: parseResults
+			})
+
+			function parseResults(data) {
+				console.log(JSON.stringify(data.results));
+				output = {
+					"lat": 0,
+					"lng": 0
+				}
+				$("#originLat").val(data.results[0].geometry.location.lat);
+				$("#originLng").val(output.lng = data.results[0].geometry.location.lng);
+			}	
+		}
+
+		var calculateRoute = function() {
+			var origin = $("#origin").val();
+			var destination = $("#destination").val();
+
+			console.log($("#waypoints").val());
+
+			waypoints = [];
+			waypoints.push({
+				location: $("#waypoints").val(), 
+				stopover: true
+			});
+
+			for(var x=0; x<waypoints.length; x++) {
+				console.log(x + "=" + waypoints[x]);
+			}
+
+			var request = {
+				origin: origin,
+				destination: destination,
+				waypoints: waypoints,
+				optimizeWaypoints: true,
+				travelMode: google.maps.TravelMode.DRIVING
+			};
+
+			directionSvc.route(request, function(response, status) {
+				if(status == google.maps.DirectionsStatus.OK) {
+					directionDisplay.setDirections(response);
+
+					var route = response.routes[0];
+
+					//console.log("ROUTE: " + JSON.stringify(route));
+
+					var summaryPanel = ""
+					
+					for(var y=0; y < route.legs.length; y++) {
+						console.log("route.legs[y].start_address = " + route.legs[y].start_address);
+						var routeSegment = y + 1;
+						summaryPanel += '<b>Route Segment: ' + routeSegment + '</b><br/>';
+						summaryPanel += route.legs[y].start_address + " to ";
+						summaryPanel += route.legs[y].end_address + "<br/>";
+						summaryPanel += route.legs[y].distance.text + "<br/><br/>";
+					}
+
+					$("#directions_panel").html(summaryPanel);
+				}
+			});
+		}
+	</script>
+</head>
+<body>
+	<div id="map-canvas" style="float:right;width:70%;height:100%;"></div>
+	
+	<div class="container-fluid">
+		
+		<div class="row">
+			<div class="col-md-3">
+				<h1>Find My Route</h1>
+			</div>
+			<div class="col-md-3">
+				<form>
+					<div class="form-group">
+						<label for="origin">Origin</label>
+						<input type="text" class="form-control" id="origin" name="origin" value="Broomfield, CO" onblur="getLatLng()" placeholder="Enter the starting address">
+					</div>
+					<div class="form-group">
+						<label for="destination">Destination</label>
+						<input type="text" class="form-control" id="destination" name="destination" value="Lafayette, CO" placeholder="Enter the final destination">
+					</div>
+					<div class="form-group">
+						<label for="destination">Waypoints</label>
+						<input type="text" class="form-control" id="waypoints" name="waypoints" value="Longmont, CO">
+					</div>
+					<div>
+						<input type="button" value="Find My Route" onClick="initialize()">
+						<input type="hidden" id="originLat" name="originLat">
+						<input type="hidden" id="originLng" name="originLng">
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-3">
+				<div id="directions_panel" style="margin:20px;background-color:#FFEE77;"></div>
+			</div>
+		</div>
+	</div>
+	
+	
+</body>
+</html>
