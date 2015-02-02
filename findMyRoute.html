@@ -10,13 +10,8 @@
 	<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
 	
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
-
-<!-- Optional theme -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
-
-<!-- Latest compiled and minified JavaScript -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-	
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 
 	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBguA2IzMMVbeWLIER4VzjmfCZ5hRVf22A">
     </script>
@@ -24,7 +19,6 @@
 	<script type="text/javascript">
 		var directionSvc = new google.maps.DirectionsService();
 		var directionDisplay;
-		//var waypoints = [];
 		var map;
 		
 		var initialize = function() {
@@ -43,8 +37,6 @@
 
 		var getLatLng = function() {
 			var origin = $("#origin").val();
-			console.log("jOrigin = " + origin);
-
 			var url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + origin
 			var output;
 
@@ -55,7 +47,6 @@
 			})
 
 			function parseResults(data) {
-				console.log(JSON.stringify(data.results));
 				output = {
 					"lat": 0,
 					"lng": 0
@@ -68,16 +59,11 @@
 		var calculateRoute = function() {
 			var origin = $("#origin").val();
 			var destination = $("#destination").val();
-
-			//console.log($("#waypoints1").val());
-
 			var stopOver = [];
 			
-			console.log("numStopOver.val() = " + $("#numStopOver").val());
 			for(var x=1; x<=$("#numStopOver").val(); x++) {
 				
 				if($("#stopOver"+x).val() != "") {
-					console.log(x + "=" + $("#stopOver"+x).val());
 					stopOver.push({
 						location: $("#stopOver"+x).val(), 
 						stopover: true
@@ -98,13 +84,9 @@
 					directionDisplay.setDirections(response);
 
 					var route = response.routes[0];
-
-					//console.log("ROUTE: " + JSON.stringify(route));
-
 					var summaryPanel = ""
 					
 					for(var y=0; y < route.legs.length; y++) {
-						console.log("route.legs[y].start_address = " + route.legs[y].start_address);
 						var routeSegment = y + 1;
 						summaryPanel += '<b>Route Segment: ' + routeSegment + '</b><br/>';
 						summaryPanel += route.legs[y].start_address + " to ";
